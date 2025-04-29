@@ -2,6 +2,11 @@ package models
 
 import "time"
 
+const (
+	RoleReceptionist = "receptionist"
+	RoleDoctor      = "doctor"
+)
+
 type User struct {
 	Id           uint   `gorm:"primaryKey"`
 	Name         string `gorm:"not null"`
