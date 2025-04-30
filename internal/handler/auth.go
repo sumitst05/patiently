@@ -28,7 +28,7 @@ func Singup(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"id": user.Id, "email": user.Email})
+	c.JSON(http.StatusCreated, gin.H{"id": user.ID, "email": user.Email})
 }
 
 func Signin(c *gin.Context) {
@@ -49,7 +49,7 @@ func Signin(c *gin.Context) {
 		return
 	}
 
-	token, err := utils.GenerateJWT(user.Id, user.Role)
+	token, err := utils.GenerateJWT(user.ID, user.Role)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error while generating token"})
 		return

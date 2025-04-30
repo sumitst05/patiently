@@ -25,8 +25,26 @@ func InitDB() {
 	}
 
 	// auto-migrations
-	if err := db.AutoMigrate(&models.User{}, &models.Patient{}); err != nil {
+	if err := db.AutoMigrate(&models.User{}, &models.Patient{}, &models.RegistrationHistory{}); err != nil {
 		log.Fatal("Auto migration failed:", err)
+	}
+
+	// re-add foregin key for patient after migration
+	err = db.Exec(`
+		ALTER TABLE registration_histories
+		DROP CONSTRAINT IF EXISTS fk_registration_histories_patient;
+	`).Error
+	if err != nil {
+		log.Fatal("Failed to drop foreign key constraint:", err)
+	}
+
+	err = db.Exec(`
+		ALTER TABLE registration_histories
+		ADD CONSTRAINT fk_registration_histories_patient
+		FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE;
+	`).Error
+	if err != nil {
+		log.Fatal("Failed to add foreign key constraint:", err)
 	}
 
 	DB = db

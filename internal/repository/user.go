@@ -7,7 +7,7 @@ import (
 )
 
 func CreateUser(user *models.User) (*models.User, error) {
-	// validate roles received from payload
+	// sanitize rolesr received from payload
 	if user.Role != models.RoleReceptionist && user.Role != models.RoleDoctor {
 		return nil, fmt.Errorf("Invalid role: %s", user.Role)
 	}

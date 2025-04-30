@@ -5,7 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/sumitst05/patiently/internal/handler"
-	"github.com/sumitst05/patiently/middleware"
+	"github.com/sumitst05/patiently/internal/middleware"
 )
 
 func SetupRouter() *gin.Engine {
@@ -22,18 +22,37 @@ func SetupRouter() *gin.Engine {
 
 	r.SetTrustedProxies(nil)
 
-	// health route
-	r.GET("/health", handler.HealthCheck)
+	// base api group
+	api := r.Group("/api")
 
-	// auth routes
-	r.POST("/signup", handler.Singup)
-	r.POST("/signin", handler.Signin)
-	r.POST("/logout", handler.Logout)
+	// health route: /api/health
+	api.GET("/health", handler.HealthCheck)
 
-	protected := r.Group("/api")
-	protected.Use(middleware.Auth())
+	// auth routes: /api/auth/*
+	auth := api.Group("/auth")
+	auth.POST("/signup", handler.Singup)
+	auth.POST("/signin", handler.Signin)
+	auth.POST("/logout", handler.Logout)
+
+	// protected routes: routes that require authentication
+	api.Use(middleware.Auth())
 	{
-		protected.GET("/me", handler.Me) // route to get current user
+		// route to get current user
+		api.GET("/me", handler.Me)
+
+		// patient routes: /api/patient/*
+		patient := api.Group("/patient")
+		{
+			// routes accessible by both receptionist and doctor
+			patient.GET("/fetch", middleware.Role("receptionist", "doctor"), handler.GetAllPatients)
+			patient.GET("/fetch/:id", middleware.Role("receptionist", "doctor"), handler.GetPatientById)
+
+			// routes accessible only by receptionist
+			patient.GET("/fetch/:id/history", middleware.Role("receptionist", "doctor"), handler.GetPatientRegistrationHistory)
+			patient.POST("/create", middleware.Role("receptionist"), handler.CreatePatient)
+			patient.POST("/update/:id", middleware.Role("receptionist"), handler.UpdatePatient)
+			patient.DELETE("/delete/:id", middleware.Role("receptionist"), handler.DeletePatient)
+		}
 	}
 
 	return r
