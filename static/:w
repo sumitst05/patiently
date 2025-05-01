@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8" />
+	<title>Doctor Portal</title>
+	<script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-50 min-h-screen p-8">
+	<div class="flex justify-between items-center mb-6">
+		<h1 class="text-3xl font-bold">Doctor Portal</h1>
+		<button id="logout" class="bg-red-500 text-white px-4 py-2 rounded">
+			Logout
+		</button>
+	</div>
+
+	<h2 class="text-xl font-semibold mb-4">Patient List</h2>
+	<table class="w-full table-auto bg-white shadow rounded">
+		<thead>
+			<tr class="bg-gray-200">
+				<th class="px-4 py-2">ID</th>
+				<th class="px-4 py-2">Name</th>
+				<th class="px-4 py-2">Age</th>
+				<th class="px-4 py-2">Address</th>
+				<th class="px-4 py-2">Actions</th>
+			</tr>
+		</thead>
+		<tbody id="patientTable">
+			<!-- dynamically populated -->
+		</tbody>
+	</table>
+
+	<script>
+		async function fetchPatients() {
+			const res = await fetch("/api/patient/fetch", {
+				credentials: "include",
+			});
+			const patients = await res.json();
+			const table = document.getElementById("patientTable");
+			table.innerHTML = "";
+			patients.forEach((p) => {
+				table.innerHTML += `
+          <tr>
+            <td class="border px-4 py-2">${p.id}</td>
+            <td class="border px-4 py-2">${p.name}</td>
+            <td class="border px-4 py-2">${p.age}</td>
+            <td class="border px-4 py-2">${p.address}</td>
+            <td class="border px-4 py-2">
+              <button onclick="editPatient(${p.id}, '${p.name}', ${p.age}, '${p.address}')" class="bg-yellow-500 text-white px-2 py-1 rounded">Edit</button>
+            </td>
+          </tr>`;
+			});
+		}
+
+		function editPatient(id, oldName, oldAge, oldAddress) {
+			const name = prompt("Update name:", oldName);
+			const age = prompt("Update age:", oldAge);
+			const address = prompt("Update address:", oldAddress);
+			if (name && age && address) {
+				fetch(`/api/patient/update/${id}`, {
+					method: "PUT",
+					headers: {"Content-Type": "application/json"},
+					credentials: "include",
+					body: JSON.stringify({name, age, address}),
+				}).then(fetchPatients);
+			}
+		}
+
+		document.getElementById("logout").addEventListener("click", async () => {
+			await fetch("/api/auth/signout", {
+				method: "POST",
+				credentials: "include",
+			});
+			window.location.href = "/static/login.html";
+		});
+
+		fetchPatients();
+	</script>
+</body>
+
+</html>

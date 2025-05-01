@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Doctor Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+
+  <body class="bg-gray-50 min-h-screen p-8">
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-3xl font-bold">Doctor Portal</h1>
+      <button id="logout" class="bg-red-500 text-white px-4 py-2 rounded">
+        Logout
+      </button>
+    </div>
+
+    <h2 class="text-xl font-semibold mb-4">Patient List</h2>
+    <table class="w-full table-auto bg-white shadow rounded">
+      <thead>
+        <tr class="bg-gray-200">
+          <th class="px-4 py-2">ID</th>
+          <th class="px-4 py-2">Name</th>
+          <th class="px-4 py-2">Age</th>
+          <th class="px-4 py-2">Gender</th>
+          <th class="px-4 py-2">Address</th>
+          <th class="px-4 py-2">Phone</th>
+          <th class="px-4 py-2">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="patientTable">
+        <!-- dynamically populated -->
+      </tbody>
+    </table>
+
+    <!-- Edit Modal -->
+    <div
+      id="editModal"
+      class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center hidden"
+    >
+      <div class="bg-white rounded shadow p-6 w-full max-w-md">
+        <h2 class="text-xl font-semibold mb-4">Edit Patient</h2>
+        <form id="editForm" class="space-y-2">
+          <input type="hidden" id="editId" />
+          <input
+            type="text"
+            id="editName"
+            placeholder="Name"
+            class="w-full border rounded px-3 py-2"
+            required
+          />
+          <input
+            type="number"
+            id="editAge"
+            placeholder="Age"
+            class="w-full border rounded px-3 py-2"
+            required
+          />
+          <select
+            id="editGender"
+            class="w-full border rounded px-3 py-2"
+            required
+          >
+            <option value="" disabled>Select Gender</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+            <option value="other">Other</option>
+          </select>
+          <input
+            type="text"
+            id="editAddress"
+            placeholder="Address"
+            class="w-full border rounded px-3 py-2"
+            required
+          />
+          <input
+            type="tel"
+            id="editPhone"
+            placeholder="Phone (10 digits)"
+            pattern="[0-9]{10}"
+            class="w-full border rounded px-3 py-2"
+            required
+          />
+          <div class="flex justify-end space-x-2">
+            <button
+              type="button"
+              id="cancelEdit"
+              class="bg-gray-300 px-4 py-2 rounded"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              class="bg-green-500 text-white px-4 py-2 rounded"
+            >
+              Update
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      async function fetchPatients() {
+        const res = await fetch("/api/patient/fetch", {
+          credentials: "include",
+        });
+        const patients = await res.json();
+        const table = document.getElementById("patientTable");
+        table.innerHTML = "";
+        patients.forEach((p) => {
+          table.innerHTML += `
+          <tr>
+            <td class="border px-4 py-2">${p.id}</td>
+            <td class="border px-4 py-2">${p.name}</td>
+            <td class="border px-4 py-2">${p.age}</td>
+            <td class="border px-4 py-2">${p.gender}</td>
+            <td class="border px-4 py-2">${p.address}</td>
+            <td class="border px-4 py-2">${p.phone}</td>
+            <td class="border px-4 py-2 flex justify-center">
+              <button onclick='openEditModal(${JSON.stringify(p)})' class="bg-yellow-500 text-white px-2 py-1 rounded">Edit</button>
+            </td>
+          </tr>`;
+        });
+      }
+
+      function openEditModal(patient) {
+        document.getElementById("editId").value = patient.id;
+        document.getElementById("editName").value = patient.name;
+        document.getElementById("editAge").value = patient.age;
+        document.getElementById("editGender").value = patient.gender;
+        document.getElementById("editAddress").value = patient.address;
+        document.getElementById("editPhone").value = patient.phone;
+        document.getElementById("editModal").classList.remove("hidden");
+      }
+
+      document.getElementById("cancelEdit").addEventListener("click", () => {
+        document.getElementById("editModal").classList.add("hidden");
+      });
+
+      document
+        .getElementById("editForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const id = document.getElementById("editId").value;
+          const name = document.getElementById("editName").value;
+          const age = parseInt(document.getElementById("editAge").value);
+          const gender = document.getElementById("editGender").value;
+          const address = document.getElementById("editAddress").value;
+          const phone = document.getElementById("editPhone").value;
+          await fetch(`/api/patient/update/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ name, age, gender, address, phone }),
+          });
+          document.getElementById("editModal").classList.add("hidden");
+          fetchPatients();
+        });
+
+      document.getElementById("logout").addEventListener("click", async () => {
+        await fetch("/api/auth/signout", {
+          method: "POST",
+          credentials: "include",
+        });
+        window.location.href = "/static/index.html";
+      });
+
+      fetchPatients();
+    </script>
+  </body>
+</html>

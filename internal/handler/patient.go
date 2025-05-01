@@ -36,6 +36,7 @@ func CreatePatient(c *gin.Context) {
 	)
 	if err != nil {
 		c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+		return
 	}
 
 	c.JSON(http.StatusOK, patient)

@@ -22,6 +22,12 @@ func SetupRouter() *gin.Engine {
 
 	r.SetTrustedProxies(nil)
 
+	// Serving static UI
+	r.Static("/static", "./static")
+	r.GET("/", func(c *gin.Context) {
+		c.File("./static/index.html")
+	})
+
 	// base api group
 	api := r.Group("/api")
 

@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Patient History</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+
+  <body class="bg-gray-50 min-h-screen p-8">
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-3xl font-bold">Patient History</h1>
+      <a
+        href="receptionist.html"
+        class="bg-blue-500 text-white px-4 py-2 rounded"
+        >Back to Portal</a
+      >
+    </div>
+
+    <table class="w-full table-auto bg-white shadow rounded">
+      <thead>
+        <tr class="bg-gray-200">
+          <th class="px-4 py-2">Timestamp</th>
+          <th class="px-4 py-2">Changed By</th>
+          <th class="px-4 py-2">Role</th>
+          <th class="px-4 py-2">Action</th>
+          <th class="px-4 py-2">Old Value</th>
+          <th class="px-4 py-2">New Value</th>
+        </tr>
+      </thead>
+      <tbody id="historyTable">
+        <!-- dynamically populated -->
+      </tbody>
+    </table>
+
+    <script>
+      const params = new URLSearchParams(window.location.search);
+      const patientId = params.get("patientId");
+
+      if (!patientId) {
+        alert("No patient ID provided.");
+        window.location.href = "receptionist.html";
+      }
+
+      async function fetchHistory() {
+        const res = await fetch(`/api/patient/fetch/${patientId}/history`, {
+          credentials: "include",
+        });
+        const history = await res.json();
+        const table = document.getElementById("historyTable");
+        table.innerHTML = "";
+
+        history.forEach((record) => {
+          table.innerHTML += `
+            <tr>
+              <td class="border px-4 py-2">${new Date(
+                record.timestamp,
+              ).toLocaleString()}</td>
+              <td class="border px-4 py-2">${
+                record.changed_by?.name || "Unknown"
+              }</td>
+              <td class="border px-4 py-2">${
+                record.changed_by?.role || "Unknown"
+              }</td>
+              <td class="border px-4 py-2">${record.action || "N/A"}</td>
+							<td class="border px-4 py-2 max-w-[200px] break-words">${record.old_value !== "" ? record.old_value : "N/A"}</td>
+							<td class="border px-4 py-2 max-w-[200px] break-words">${record.new_value !== "" ? record.new_value : "N/A"}</td>
+            </tr>`;
+        });
+      }
+
+      fetchHistory();
+    </script>
+  </body>
+</html>
