@@ -7,7 +7,7 @@ import (
 	"github.com/sumitst05/patiently/internal/utils"
 )
 
-func CreatePatient(patient *models.Patient, userId uint) (*models.Patient, error) {
+func CreatePatient(patient *models.Patient) (*models.Patient, error) {
 	err := DB.Create(patient).Error
 	if err != nil {
 		return nil, err
@@ -24,7 +24,7 @@ func CreatePatient(patient *models.Patient, userId uint) (*models.Patient, error
 	logHistory := &models.RegistrationHistory{
 		PatientID:   patient.ID,
 		Action:      "create",
-		ChangedByID: userId,
+		ChangedByID: patient.CreatedByID,
 		Timestamp:   time.Now(),
 		NewValue:    newVal,
 	}
@@ -65,7 +65,7 @@ func GetPatientRegistrationHistory(patientId uint) ([]models.RegistrationHistory
 	return history, nil
 }
 
-func UpdatePatient(id uint, updatedPatient *models.Patient, userId uint) (*models.Patient, error) {
+func UpdatePatient(id uint, updatedPatient *models.Patient) (*models.Patient, error) {
 	patient := models.Patient{}
 	err := DB.First(&patient, id).Error
 	if err != nil {
@@ -99,7 +99,7 @@ func UpdatePatient(id uint, updatedPatient *models.Patient, userId uint) (*model
 	logHistory := &models.RegistrationHistory{
 		PatientID:   patient.ID,
 		Action:      "update",
-		ChangedByID: userId,
+		ChangedByID: patient.CreatedByID,
 		Timestamp:   time.Now(),
 		OldValue:    oldVal,
 		NewValue:    newVal,
@@ -118,7 +118,7 @@ func UpdatePatient(id uint, updatedPatient *models.Patient, userId uint) (*model
 	return &patient, err
 }
 
-func DeletePatient(id uint, userId uint) error {
+func DeletePatient(id uint) error {
 	patient := models.Patient{}
 
 	err := DB.First(&patient, id).Error

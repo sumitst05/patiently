@@ -5,35 +5,48 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/sumitst05/patiently/internal/models"
-	"github.com/sumitst05/patiently/internal/repository"
+	"github.com/sumitst05/patiently/internal/service"
 	"github.com/sumitst05/patiently/utils"
 )
 
 func CreatePatient(c *gin.Context) {
-	patient := models.Patient{}
+	var req struct {
+		Name    string `json:"name"`
+		Age     int    `json:"age"`
+		Gender  string `json:"gender"`
+		Address string `json:"address"`
+		Phone   string `json:"phone"`
+	}
 
-	if err := c.ShouldBindJSON(&patient); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload"})
 		return
 	}
 
 	claims := c.MustGet("claims").(*utils.Claims)
-	patient.CreatedByID = claims.UserId
 
-	createdPatient, err := repository.CreatePatient(&patient, claims.UserId)
+	patient, err := service.CreatePatient(
+		claims.UserId,
+		claims.Role,
+		req.Name,
+		req.Age,
+		req.Gender,
+		req.Address,
+		req.Phone,
+	)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create patient"})
-		return
+		c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 	}
 
-	c.JSON(http.StatusCreated, createdPatient)
+	c.JSON(http.StatusOK, patient)
 }
 
 func GetAllPatients(c *gin.Context) {
-	patients, err := repository.GetAllPatients()
+	claims := c.MustGet("claims").(*utils.Claims)
+
+	patients, err := service.GetAllPatients(claims.Role)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch patients"})
+		c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -48,7 +61,9 @@ func GetPatientById(c *gin.Context) {
 		return
 	}
 
-	patient, err := repository.GetPatientById(uint(id))
+	claims := c.MustGet("claims").(*utils.Claims)
+
+	patient, err := service.GetPatientById(uint(id), claims.Role)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Patient not found"})
 		return
@@ -65,7 +80,9 @@ func GetPatientRegistrationHistory(c *gin.Context) {
 		return
 	}
 
-	history, err := repository.GetPatientRegistrationHistory(uint(id))
+	claims := c.MustGet("claims").(*utils.Claims)
+
+	history, err := service.GetPatientRegistrationHistory(uint(id), claims.Role)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve registration history"})
 		return
@@ -82,15 +99,30 @@ func UpdatePatient(c *gin.Context) {
 		return
 	}
 
-	patient := models.Patient{}
-	if err := c.ShouldBindJSON(&patient); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
+	var req struct {
+		Name    string `json:"name"`
+		Age     int    `json:"age"`
+		Gender  string `json:"gender"`
+		Address string `json:"address"`
+		Phone   string `json:"phone"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload"})
 		return
 	}
-	patient.ID = uint(id)
 
 	claims := c.MustGet("claims").(*utils.Claims)
-	updatedPatient, err := repository.UpdatePatient(claims.UserId, &patient, claims.UserId)
+
+	updatedPatient, err := service.UpdatePatient(
+		uint(id),
+		claims.Role,
+		req.Name,
+		req.Age,
+		req.Gender,
+		req.Address,
+		req.Phone,
+	)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update patient"})
 		return
@@ -108,7 +140,7 @@ func DeletePatient(c *gin.Context) {
 	}
 
 	claims := c.MustGet("claims").(*utils.Claims)
-	err = repository.DeletePatient(uint(id), claims.UserId)
+	err = service.DeletePatient(uint(id), claims.Role)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete patient"})
 		return

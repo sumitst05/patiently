@@ -1,18 +1,12 @@
 package repository
 
 import (
-	"fmt"
-
 	"github.com/sumitst05/patiently/internal/models"
 )
 
 func CreateUser(user *models.User) (*models.User, error) {
-	// sanitize rolesr received from payload
-	if user.Role != models.RoleReceptionist && user.Role != models.RoleDoctor {
-		return nil, fmt.Errorf("Invalid role: %s", user.Role)
-	}
-
 	err := DB.Create(user).Error
+
 	return user, err
 }
 

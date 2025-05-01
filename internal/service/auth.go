@@ -9,6 +9,10 @@ import (
 )
 
 func RegisterUser(name, email, password, role string) (*models.User, error) {
+	if role != models.RoleReceptionist && role != models.RoleDoctor {
+		return nil, errors.New("Invalid role")
+	}
+
 	hash, err := utils.HashPassword(password)
 	if err != nil {
 		return nil, err
