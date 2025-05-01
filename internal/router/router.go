@@ -44,14 +44,14 @@ func SetupRouter() *gin.Engine {
 		patient := api.Group("/patient")
 		{
 			// routes accessible by both receptionist and doctor
-			patient.GET("/fetch", middleware.Role("receptionist", "doctor"), handler.GetAllPatients)
-			patient.GET("/fetch/:id", middleware.Role("receptionist", "doctor"), handler.GetPatientById)
-			patient.POST("/update/:id", middleware.Role("receptionist", "doctor"), handler.UpdatePatient)
+			patient.GET("/fetch", handler.GetAllPatients)
+			patient.GET("/fetch/:id", handler.GetPatientById)
+			patient.POST("/update/:id", handler.UpdatePatient)
 
 			// routes accessible only by receptionist
-			patient.GET("/fetch/:id/history", middleware.Role("receptionist"), handler.GetPatientRegistrationHistory)
-			patient.POST("/create", middleware.Role("receptionist"), handler.CreatePatient)
-			patient.DELETE("/delete/:id", middleware.Role("receptionist"), handler.DeletePatient)
+			patient.GET("/fetch/:id/history", handler.GetPatientRegistrationHistory)
+			patient.POST("/create", handler.CreatePatient)
+			patient.DELETE("/delete/:id", handler.DeletePatient)
 		}
 	}
 
