@@ -65,38 +65,30 @@ func GetPatientRegistrationHistory(patientId uint) ([]models.RegistrationHistory
 	return history, nil
 }
 
-func UpdatePatient(id uint, updatedPatient *models.Patient) (*models.Patient, error) {
-	patient := models.Patient{}
-	err := DB.First(&patient, id).Error
-	if err != nil {
+func UpdatePatient(id uint, patient *models.Patient) (*models.Patient, error) {
+	existing := models.Patient{}
+	if err := DB.First(&existing, id).Error; err != nil {
 		return nil, err
 	}
 
-	err = DB.Preload("CreatedBy").First(&patient, patient.ID).Error
-	if err != nil {
-		return nil, err
-	}
-
-	// json string for old value for snapshot of patient registration
-	oldVal, err := utils.SnapshotStruct(updatedPatient)
-
-	// selectively updating the fields received in payload
-	err = utils.UpdateStruct(&patient, updatedPatient)
+	// json string for old snapshot of patient registration
+	oldVal, err := utils.SnapshotStruct(&existing)
 	if err != nil {
 		return nil, err
 	}
 
 	patient.UpdatedAt = time.Now()
+	if err := DB.Save(patient).Error; err != nil {
+		return nil, err
+	}
 
-	err = DB.Save(&patient).Error
+	// json string for new snapshot of patient registration
+	newVal, err := utils.SnapshotStruct(patient)
 	if err != nil {
 		return nil, err
 	}
 
-	// json string for new value for snapshot of patient registration
-	newVal, err := utils.SnapshotStruct(patient)
-
-	logHistory := &models.RegistrationHistory{
+	log := &models.RegistrationHistory{
 		PatientID:   patient.ID,
 		Action:      "update",
 		ChangedByID: patient.CreatedByID,
@@ -105,17 +97,15 @@ func UpdatePatient(id uint, updatedPatient *models.Patient) (*models.Patient, er
 		NewValue:    newVal,
 	}
 
-	err = DB.Create(logHistory).Error
-	if err != nil {
+	if err := DB.Create(log).Error; err != nil {
 		return nil, err
 	}
 
-	err = DB.Preload("ChangedBy").First(&logHistory, logHistory.ID).Error
-	if err != nil {
+	if err := DB.Preload("ChangedBy").First(log, log.ID).Error; err != nil {
 		return nil, err
 	}
 
-	return &patient, err
+	return patient, nil
 }
 
 func DeletePatient(id uint) error {

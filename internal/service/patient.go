@@ -61,7 +61,11 @@ func UpdatePatient(patientId uint, role string, name string, age int, gender, ad
 		return nil, errors.New("Invalid patient age")
 	}
 
-	patient := *&models.Patient{}
+	patient, err := repository.GetPatientById(patientId)
+	if err != nil {
+		return nil, err
+	}
+
 	if name != "" {
 		patient.Name = name
 	}
@@ -78,7 +82,7 @@ func UpdatePatient(patientId uint, role string, name string, age int, gender, ad
 		patient.Phone = phone
 	}
 
-	return repository.UpdatePatient(patientId, &patient)
+	return repository.UpdatePatient(patientId, patient)
 }
 
 func DeletePatient(patientId uint, role string) error {
