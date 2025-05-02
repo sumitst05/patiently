@@ -2,6 +2,8 @@
 
 **Patiently** is a patient management platform built with a Go backend and a minimal HTML-CSS-JavaScript frontend. It supports role-based access for **Receptionists** and **Doctors**, enabling easy handling of patient records.
 
+🔗 **Live Demo**: [https://patiently-latest.onrender.com/](https://patiently-latest.onrender.com/)
+
 ## ✨ Features
 
 - 🔐 **Authentication**: Sign up & login with JWT-based token system with httpOnly cookie
