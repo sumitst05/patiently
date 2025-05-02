@@ -154,7 +154,7 @@
           const address = document.getElementById("editAddress").value;
           const phone = document.getElementById("editPhone").value;
           await fetch(`/api/patient/update/${id}`, {
-            method: "PUT",
+            method: "POST",
             headers: { "Content-Type": "application/json" },
             credentials: "include",
             body: JSON.stringify({ name, age, gender, address, phone }),
